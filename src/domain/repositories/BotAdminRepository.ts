@@ -1,4 +1,4 @@
-import { Bot, BotCreateInput, BotUpdateInput } from '../entities/bot';
+import type { Bot, BotCreateInput, BotUpdateInput } from '../entities/bot';
 
 export interface BotAdminRepository {
   listBots(): Promise<Bot[]>;

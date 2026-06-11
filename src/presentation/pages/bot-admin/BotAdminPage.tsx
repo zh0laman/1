@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
   Bot as BotIcon,
   Plus,
@@ -10,10 +11,8 @@ import {
   Search,
   LogOut,
   Sliders,
-  User,
   Shield,
-  FileText,
-  MessageSquare
+  FileText
 } from 'lucide-react';
 import type { Bot, BotCreateInput } from '../../../domain/entities/bot';
 import type { RagUser } from '../../../domain/entities/rag-auth';
@@ -130,15 +129,15 @@ export default function BotAdminPage() {
   };
 
   // Card list animations
-  const listContainer = {
+  const listContainer: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: { staggerChildren: 0.08 },
     },
   };
-
-  const cardItem = {
+  
+  const cardItem: Variants = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } },
   };
