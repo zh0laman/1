@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@import "@fontsource/roboto/400.css";
+@import "@fontsource/roboto/500.css";
+@import "@fontsource/roboto/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/outfit/400.css";
+@import "@fontsource/outfit/500.css";
+@import "@fontsource/outfit/600.css";
+@import "@fontsource/outfit/700.css";
+@import "@fontsource/outfit/800.css";
+
+@layer base {
+  :root {
+    --mk-surface-0: #f4f7fb;
+    --mk-surface-1: #ffffff;
+    --mk-surface-2: #f8fafd;
+    --mk-border-soft: #dbe4f2;
+    --mk-border-strong: #c8d5e7;
+    --mk-text-main: #0f1f33;
+    --mk-text-muted: #60718c;
+    --mk-brand: #1d72e7;
+    --mk-brand-soft: #e9f2ff;
+    --mk-success: #0d9a69;
+    --mk-danger: #cb3f3f;
+    --mk-shadow-soft: 0 2px 10px rgba(15, 35, 62, 0.06);
+    --mk-shadow-card: 0 14px 30px rgba(14, 30, 50, 0.08);
+    --mk-radius-xl: 18px;
+    --mk-radius-2xl: 24px;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  body {
+    margin: 0;
+    background: var(--mk-surface-0);
+    color: var(--mk-text-main);
+    font-family: "Roboto", sans-serif;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #dde5f2;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

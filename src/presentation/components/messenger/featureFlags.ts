@@ -1,0 +1,1 @@
+export const MESSENGER_VIDEO_CALLS_ENABLED = true

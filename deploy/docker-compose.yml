@@ -1,0 +1,14 @@
+services:
+  frontend:
+    image: messenger-frontend:latest
+    container_name: messenger-frontend
+    restart: always
+    ports:
+      - "13000:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

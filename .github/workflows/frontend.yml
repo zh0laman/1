@@ -1,0 +1,116 @@
+name: Frontend CI/CD (build -> deploy)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  APP_NAME: "messenger-frontend"
+  DEPLOY_DIR: "/var/www/messenger/frontend"
+  SOURCE_DIR: "/var/www/messenger/frontend-src"
+  PUBLIC_PORT: "13000"
+  VITE_API_URL: "/api"
+
+jobs:
+  lint-and-build:
+    name: Lint and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        env:
+          VITE_API_URL: ${{ env.VITE_API_URL }}
+        run: npm run build
+
+  deploy:
+    name: Deploy (SSH)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint-and-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy project to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          source: "."
+          target: "${{ env.SOURCE_DIR }}"
+          rm: true
+          strip_components: 0
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            set -e
+
+            mkdir -p "${{ env.DEPLOY_DIR }}"
+            cp -f "${{ env.SOURCE_DIR }}/deploy/docker-compose.yml" "${{ env.DEPLOY_DIR }}/docker-compose.yml"
+
+            cd "${{ env.SOURCE_DIR }}"
+
+            BUILD_ARGS="--build-arg VITE_API_URL=${{ env.VITE_API_URL }} \
+              --build-arg VERSION=${{ github.sha }} \
+              --build-arg BUILD_TIME=${{ github.run_id }}"
+
+            echo "Building image with BuildKit"
+            if ! DOCKER_BUILDKIT=1 docker build --progress=plain -t "${{ env.APP_NAME }}:latest" $BUILD_ARGS .; then
+              echo "BuildKit build failed, retrying with legacy builder"
+              DOCKER_BUILDKIT=0 docker build -t "${{ env.APP_NAME }}:latest" $BUILD_ARGS .
+            fi
+
+            cd "${{ env.DEPLOY_DIR }}"
+
+            if docker compose version >/dev/null 2>&1; then
+              DC="docker compose"
+            else
+              DC="docker-compose"
+            fi
+
+            $DC up -d --remove-orphans --force-recreate
+
+            for i in $(seq 1 45); do
+              if curl -fsS "http://localhost:${{ env.PUBLIC_PORT }}/health" >/dev/null 2>&1; then
+                echo "OK: frontend healthcheck is up"
+                exit 0
+              fi
+              sleep 2
+            done
+
+            echo "ERROR: frontend healthcheck failed"
+            $DC ps
+            docker logs --tail=200 messenger-frontend || true
+            exit 1
