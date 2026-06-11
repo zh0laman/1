@@ -104,32 +104,32 @@ async def ingest_document(
             all_embeddings.extend(batch_embs)
 
         # 5. Вставляем чанки через raw SQL (pgvector <-> vector type)
-        async with db.connection() as conn:
-            raw = await conn.get_raw_connection()
-            pg_conn = raw.driver_connection
+        conn = await db.connection()
+        raw = await conn.get_raw_connection()
+        pg_conn = raw.driver_connection
 
-            await pg_conn.executemany(
-                """
-                INSERT INTO chunks
-                  (id, document_id, bot_id, tenant_id, content, embedding, chunk_index, page_number, metadata)
-                VALUES
-                  ($1, $2, $3, $4, $5, $6::vector, $7, $8, $9)
-                """,
-                [
-                    (
-                        uuid.uuid4(),
-                        doc.id,
-                        bot_id,
-                        tenant_id,
-                        chunk.content,
-                        json.dumps(emb),
-                        chunk.chunk_index,
-                        chunk.page_number,
-                        json.dumps(chunk.metadata),
-                    )
-                    for chunk, emb in zip(chunks, all_embeddings)
-                ],
-            )
+        await pg_conn.executemany(
+            """
+            INSERT INTO chunks
+              (id, document_id, bot_id, tenant_id, content, embedding, chunk_index, page_number, metadata)
+            VALUES
+              ($1, $2, $3, $4, $5, $6::vector, $7, $8, $9)
+            """,
+            [
+                (
+                    uuid.uuid4(),
+                    doc.id,
+                    bot_id,
+                    tenant_id,
+                    chunk.content,
+                    json.dumps(emb),
+                    chunk.chunk_index,
+                    chunk.page_number,
+                    json.dumps(chunk.metadata),
+                )
+                for chunk, emb in zip(chunks, all_embeddings)
+            ],
+        )
 
         doc.status = "ready"
         doc.chunk_count = len(chunks)
@@ -164,30 +164,30 @@ async def retrieve_chunks(
     """
     query_emb = await get_embedding(query)
 
-    async with db.connection() as conn:
-        raw = await conn.get_raw_connection()
-        pg_conn = raw.driver_connection
+    conn = await db.connection()
+    raw = await conn.get_raw_connection()
+    pg_conn = raw.driver_connection
 
-        rows = await pg_conn.fetch(
-            """
-            SELECT
-                c.content,
-                c.chunk_index,
-                c.page_number,
-                c.metadata,
-                d.filename,
-                1 - (c.embedding <=> $1::vector) AS similarity
-            FROM chunks c
-            JOIN documents d ON d.id = c.document_id
-            WHERE c.bot_id = $2
-              AND d.status = 'ready'
-            ORDER BY c.embedding <=> $1::vector
-            LIMIT $3
-            """,
-            json.dumps(query_emb),
-            bot_id,
-            top_k,
-        )
+    rows = await pg_conn.fetch(
+        """
+        SELECT
+            c.content,
+            c.chunk_index,
+            c.page_number,
+            c.metadata,
+            d.filename,
+            1 - (c.embedding <=> $1::vector) AS similarity
+        FROM chunks c
+        JOIN documents d ON d.id = c.document_id
+        WHERE c.bot_id = $2
+          AND d.status = 'ready'
+        ORDER BY c.embedding <=> $1::vector
+        LIMIT $3
+        """,
+        json.dumps(query_emb),
+        bot_id,
+        top_k,
+    )
 
     return [
         {

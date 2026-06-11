@@ -1,0 +1,8 @@
+# Зависимости для запуска тестов (pytest-сьют в backend/tests).
+# Тесты мокают БД/MinIO/LLM и работают без Docker.
+#   pip install -r requirements.txt -r requirements-dev.txt
+#   pytest
+
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+aiosqlite>=0.20.0   # async engine для проверки паттерна db.connection()
