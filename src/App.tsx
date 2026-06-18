@@ -20,6 +20,7 @@ import ProtectedRoute from './presentation/routes/ProtectedRoute'
 import PublicOnlyRoute from './presentation/routes/PublicOnlyRoute'
 import RagLoginPage from './presentation/pages/bot-admin/RagLoginPage'
 import BotAdminPage from './presentation/pages/bot-admin/BotAdminPage'
+import RagChatPage from './presentation/pages/bot-admin/RagChatPage'
 import RagProtectedRoute from './presentation/pages/bot-admin/RagProtectedRoute'
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
         {/* RAG Admin Platform */}
         <Route path="/rag-admin/login" element={<RagLoginPage />} />
         <Route path="/rag-admin/bots" element={<RagProtectedRoute><BotAdminPage /></RagProtectedRoute>} />
+        <Route path="/rag-admin/chat" element={<RagProtectedRoute><RagChatPage /></RagProtectedRoute>} />
 
         <Route element={<PublicOnlyRoute />}>
           <Route path="/login" element={<LoginPage />} />

@@ -12,7 +12,8 @@ import {
   LogOut,
   Sliders,
   Shield,
-  FileText
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import type { Bot, BotCreateInput } from '../../../domain/entities/bot';
 import type { RagUser } from '../../../domain/entities/rag-auth';
